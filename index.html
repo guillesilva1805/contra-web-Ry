@@ -62,20 +62,20 @@
       const p2 = document.querySelector('#pass2').value.trim();
       const btn = document.querySelector('#btn');
       const mismatch = p1 && p2 && p1 !== p2;
-      if(mismatch){ show('Las contraseñas no coinciden.'); btn.disabled=true; }
-      else { document.querySelector('#msg').textContent=''; btn.disabled=false; }
+      if(mismatch){ document.querySelector('#hint').textContent='Las contraseñas no coinciden.'; btn.disabled=true; }
+      else { document.querySelector('#hint').textContent=''; document.querySelector('#msg').textContent=''; btn.disabled=false; }
     }
     document.querySelector('#pass1').addEventListener('input', updateState);
     document.querySelector('#pass2').addEventListener('input', updateState);
-    document.querySelector('#toggle1').onclick=()=>{ const i=document.querySelector('#pass1'); i.type=i.type==='password'?'text':'password'; };
-    document.querySelector('#toggle2').onclick=()=>{ const i=document.querySelector('#pass2'); i.type=i.type==='password'?'text':'password'; };
+    document.querySelector('#toggle1').onclick=()=>{ const i=document.querySelector('#pass1'); i.type=i.type==='password'?'text':'password'; const b=document.querySelector('#toggle1'); b.textContent = i.type==='password'?'Mostrar':'Ocultar'; };
+    document.querySelector('#toggle2').onclick=()=>{ const i=document.querySelector('#pass2'); i.type=i.type==='password'?'text':'password'; const b=document.querySelector('#toggle2'); b.textContent = i.type==='password'?'Mostrar':'Ocultar'; };
 
 
     q('#btn').onclick = async () => {
       if (!(await ensureInviteSession())) return;
       const p1 = q('#pass1').value.trim();
       const p2 = q('#pass2').value.trim();
-      if (!p1 || !p2 || p1 !== p2) { show('Las contraseñas no coinciden.'); return; }
+      if (!p1 || !p2 || p1 !== p2) { document.querySelector('#hint').textContent='Las contraseñas no coinciden.'; return; }
       if (p1.length < 8) { show('Usa al menos 8 caracteres.'); return; }
       const { error } = await supabase.auth.updateUser({ password: p1 });
       if (error) { show('No se pudo guardar: ' + (error.message or 'Intenta otra vez.')); return; }

@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Crear contraseña - ReporteYa</title>
-  <script src="https://esm.sh/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
   <style>
     :root { --primary:#1565C0; }
     body{font-family:system-ui,sans-serif;max-width:480px;margin:40px auto;padding:0 16px}
@@ -48,7 +48,7 @@
     }
   } catch (e) { console.warn("Supabase SDK not ready", e); }
 }
-let supabase = window.__sbClient;
+
 const q = (s) => document.querySelector(s);
     const show = (t, ok=false) => { const m=q('#msg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); };
 
@@ -66,10 +66,10 @@ const q = (s) => document.querySelector(s);
       const { access_token, refresh_token, error, error_description } = parseHash();
       if (error) { show(error_description || 'Enlace inválido o expirado. Solicita una nueva invitación.'); return false; }
       if (access_token && refresh_token) {
-        initSupabase(); const { error } = await (supabase? supabase.auth.setSession : async()=>({error:'no sdk'}))({ access_token, refresh_token });
+        initSupabase(); const { error } = await (supabase? (getClient()?.auth.setSession) : async()=>({error:'no sdk'}))({ access_token, refresh_token });
         if (error) console.warn('setSession error', error);
       }
-      initSupabase(); const { data: { session } } = await (supabase? supabase.auth.getSession():{data:{session:null}});
+      initSupabase(); const { data: { session } } = await (supabase? (getClient()?.auth.getSession)():{data:{session:null}});
       if (!session) { show('No hay sesión de invitación activa. Abre el enlace del correo nuevamente.'); return false; }
       return true;
     }
@@ -108,7 +108,7 @@ const q = (s) => document.querySelector(s);
       const p2 = q('#pass2').value.trim();
       if (!p1 || !p2 || p1 !== p2) { q('#hint').textContent='Las contraseñas no coinciden.'; return; }
       if (p1.length < 8) { show('Usa al menos 8 caracteres.'); return; }
-      initSupabase(); const { error } = await (supabase? supabase.auth.updateUser({ password: p1 }):{error:'no sdk'});
+      initSupabase(); const { error } = await (supabase? (getClient()?.auth.updateUser)({ password: p1 }):{error:'no sdk'});
       if (error) { show('No se pudo guardar: ' + (error.message || 'Intenta otra vez.')); return; }
       show('Contraseña creada. Ya puedes iniciar sesión en la app.', true);
     };

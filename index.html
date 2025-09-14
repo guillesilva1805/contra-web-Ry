@@ -37,12 +37,19 @@
   <script>
     function togglePwd(id, btn){ const i=document.getElementById(id); i.type = (i.type==="password")?"text":"password"; if(btn) btn.textContent = (i.type==="password")?"Mostrar":"Ocultar"; }
     let supabase;
-    function initSupabase(){ try{ if(!supabase && window.supabase){ supabase = window.supabase.createClient(
-      "https://uppdkjfjxtjnukftgwhz.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcGRramZqeHRqbnVrZnRnd2h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDE3NjMsImV4cCI6MjA2MzI3Nzc2M30._bPFFm4NqghiVPmytaGkiD40QFc1Ct-oIQx1gOK0g74"
-    );
-
-    const q = (s) => document.querySelector(s);
+    function initSupabase(){
+  try {
+    if (!window.supabase) return;
+    if (!window.__sbClient) {
+      window.__sbClient = window.supabase.createClient(
+        "https://uppdkjfjxtjnukftgwhz.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcGRramZqeHRqbnVrZnRnd2h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDE3NjMsImV4cCI6MjA2MzI3Nzc2M30._bPFFm4NqghiVPmytaGkiD40QFc1Ct-oIQx1gOK0g74"
+      );
+    }
+  } catch (e) { console.warn("Supabase SDK not ready", e); }
+}
+let supabase = window.__sbClient;
+const q = (s) => document.querySelector(s);
     const show = (t, ok=false) => { const m=q('#msg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); };
 
     function parseHash() {

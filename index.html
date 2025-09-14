@@ -6,20 +6,32 @@
   <title>Crear contraseña - ReporteYa</title>
   <script src="https://esm.sh/@supabase/supabase-js@2"></script>
   <style>
-    body{font-family:system-ui,sans-serif;max-width:480px;margin:40px auto}
-    input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
-    input{border:2px solid #90A4AE;border-radius:10px;background:#D6E4FF}
+    :root { --primary:#1565C0; }
+    body{font-family:system-ui,sans-serif;max-width:480px;margin:40px auto;padding:0 16px}
+    input,button{padding:12px;margin:8px 0;font-size:16px}
+    input{border:2px solid #90A4AE;border-radius:10px;background:#D6E4FF;width:100%}
     input:focus{border-color:#3B82F6}
-    button{border:0;border-radius:999px;background:#1565C0;color:#fff}
+    .row{display:flex;gap:8px;align-items:center}
+    .row input{flex:1;min-width:0}
+    .toggle{width:auto;padding:6px 10px;border-radius:10px;background:#90A4AE;color:#111;border:0}
+    #btn{width:100%;border:0;border-radius:999px;background:var(--primary);color:#fff}
     .msg{min-height:24px;margin-top:8px}
+    .hint{min-height:18px;color:#D32F2F;font-size:14px;margin-top:4px}
     .ok{color:#2E7D32}.err{color:#D32F2F}
   </style>
 </head>
 <body>
   <h1>Crear contraseña</h1>
   <p>Ingresa tu nueva contraseña para activar tu cuenta.</p>
-  <input id="pass1" type="password" placeholder="Nueva contraseña" />
-  <input id="pass2" type="password" placeholder="Repite la contraseña" />
+  <div class="row">
+    <input id="pass1" type="password" placeholder="Nueva contraseña" />
+    <button type="button" id="toggle1" class="toggle">Mostrar</button>
+  </div>
+  <div class="row">
+    <input id="pass2" type="password" placeholder="Repite la contraseña" />
+    <button type="button" id="toggle2" class="toggle">Mostrar</button>
+  </div>
+  <div id="hint" class="hint"></div>
   <button id="btn">Guardar</button>
   <p id="msg" class="msg"></p>
   <script>
@@ -42,10 +54,7 @@
 
     async function ensureInviteSession() {
       const { access_token, refresh_token, error, error_description } = parseHash();
-      if (error) {
-        show(error_description || "Enlace inválido o expirado. Solicita una nueva invitación.");
-        return false;
-      }
+      if (error) { show(error_description || 'Enlace inválido o expirado. Solicita una nueva invitación.'); return false; }
       if (access_token && refresh_token) {
         const { error } = await supabase.auth.setSession({ access_token, refresh_token });
         if (error) console.warn('setSession error', error);
@@ -58,27 +67,26 @@
     window.addEventListener('load', ensureInviteSession);
 
     function updateState(){
-      const p1 = document.querySelector('#pass1').value.trim();
-      const p2 = document.querySelector('#pass2').value.trim();
-      const btn = document.querySelector('#btn');
+      const p1 = q('#pass1').value.trim();
+      const p2 = q('#pass2').value.trim();
+      const btn = q('#btn');
       const mismatch = p1 && p2 && p1 !== p2;
-      if(mismatch){ document.querySelector('#hint').textContent='Las contraseñas no coinciden.'; btn.disabled=true; }
-      else { document.querySelector('#hint').textContent=''; document.querySelector('#msg').textContent=''; btn.disabled=false; }
+      q('#hint').textContent = mismatch ? 'Las contraseñas no coinciden.' : '';
+      btn.disabled = mismatch;
     }
-    document.querySelector('#pass1').addEventListener('input', updateState);
-    document.querySelector('#pass2').addEventListener('input', updateState);
-    document.querySelector('#toggle1').onclick=()=>{ const i=document.querySelector('#pass1'); i.type=i.type==='password'?'text':'password'; const b=document.querySelector('#toggle1'); b.textContent = i.type==='password'?'Mostrar':'Ocultar'; };
-    document.querySelector('#toggle2').onclick=()=>{ const i=document.querySelector('#pass2'); i.type=i.type==='password'?'text':'password'; const b=document.querySelector('#toggle2'); b.textContent = i.type==='password'?'Mostrar':'Ocultar'; };
-
+    q('#pass1').addEventListener('input', updateState);
+    q('#pass2').addEventListener('input', updateState);
+    q('#toggle1').onclick=()=>{ const i=q('#pass1'); i.type=i.type==='password'?'text':'password'; q('#toggle1').textContent=i.type==='password'?'Mostrar':'Ocultar'; };
+    q('#toggle2').onclick=()=>{ const i=q('#pass2'); i.type=i.type==='password'?'text':'password'; q('#toggle2').textContent=i.type==='password'?'Mostrar':'Ocultar'; };
 
     q('#btn').onclick = async () => {
       if (!(await ensureInviteSession())) return;
       const p1 = q('#pass1').value.trim();
       const p2 = q('#pass2').value.trim();
-      if (!p1 || !p2 || p1 !== p2) { document.querySelector('#hint').textContent='Las contraseñas no coinciden.'; return; }
+      if (!p1 || !p2 || p1 !== p2) { q('#hint').textContent='Las contraseñas no coinciden.'; return; }
       if (p1.length < 8) { show('Usa al menos 8 caracteres.'); return; }
       const { error } = await supabase.auth.updateUser({ password: p1 });
-      if (error) { show('No se pudo guardar: ' + (error.message or 'Intenta otra vez.')); return; }
+      if (error) { show('No se pudo guardar: ' + (error.message || 'Intenta otra vez.')); return; }
       show('Contraseña creada. Ya puedes iniciar sesión en la app.', true);
     };
   </script>

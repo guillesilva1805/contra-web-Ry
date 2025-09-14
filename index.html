@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crear contraseña - ReporteYa</title>
+  <script src="https://esm.sh/@supabase/supabase-js@2"></script>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:480px;margin:40px auto}
+    input,button{width:100%;padding:12px;margin:8px 0;font-size:16px}
+    input{border:2px solid #90A4AE;border-radius:10px;background:#D6E4FF}
+    input:focus{border-color:#3B82F6}
+    button{border:0;border-radius:999px;background:#1565C0;color:#fff}
+    .msg{min-height:24px;margin-top:8px}
+    .ok{color:#2E7D32}.err{color:#D32F2F}
+  </style>
+</head>
+<body>
+  <h1>Crear contraseña</h1>
+  <p>Ingresa tu nueva contraseña para activar tu cuenta.</p>
+  <input id="pass1" type="password" placeholder="Nueva contraseña" />
+  <input id="pass2" type="password" placeholder="Repite la contraseña" />
+  <button id="btn">Guardar</button>
+  <p id="msg" class="msg"></p>
+  <script>
+    const supabase = window.supabase.createClient(
+      "https://uppdkjfjxtjnukftgwhz.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwcGRramZqeHRqbnVrZnRnd2h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDE3NjMsImV4cCI6MjA2MzI3Nzc2M30._bPFFm4NqghiVPmytaGkiD40QFc1Ct-oIQx1gOK0g74"
+    );
+
+    const q = (s) => document.querySelector(s);
+    const show = (t, ok=false) => { const m=q('#msg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); };
+
+    function parseHashTokens() {
+      const h = new URLSearchParams(window.location.hash.slice(1));
+      const access_token = h.get('access_token');
+      const refresh_token = h.get('refresh_token');
+      return { access_token, refresh_token };
+    }
+
+    async function ensureInviteSession() {
+      const { access_token, refresh_token } = parseHashTokens();
+      if (access_token && refresh_token) {
+        const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+        if (error) console.warn('setSession error', error);
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { show('No hay sesión de invitación activa. Abre el enlace del correo nuevamente.'); return false; }
+      return true;
+    }
+
+    window.addEventListener('load', ensureInviteSession);
+
+    q('#btn').onclick = async () => {
+      if (!(await ensureInviteSession())) return;
+      const p1 = q('#pass1').value.trim();
+      const p2 = q('#pass2').value.trim();
+      if (!p1 || !p2 || p1 !== p2) { show('Las contraseñas no coinciden.'); return; }
+      if (p1.length < 8) { show('Usa al menos 8 caracteres.'); return; }
+      const { error } = await supabase.auth.updateUser({ password: p1 });
+      if (error) { show('No se pudo guardar. Intenta otra vez.'); return; }
+      show('Contraseña creada. Ya puedes iniciar sesión en la app.', true);
+    };
+  </script>
+</body>
+</html>

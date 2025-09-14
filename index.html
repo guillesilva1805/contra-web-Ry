@@ -25,16 +25,17 @@
   <p>Ingresa tu nueva contraseña para activar tu cuenta.</p>
   <div class="row">
     <input id="pass1" type="password" placeholder="Nueva contraseña" />
-    <button type="button" id="toggle1" class="toggle">Mostrar</button>
+    <button type="button" id="toggle1" class="toggle" onclick="togglePwd('pass1', this)">Mostrar</button>
   </div>
   <div class="row">
     <input id="pass2" type="password" placeholder="Repite la contraseña" />
-    <button type="button" id="toggle2" class="toggle">Mostrar</button>
+    <button type="button" id="toggle2" class="toggle" onclick="togglePwd('pass2', this)">Mostrar</button>
   </div>
   <div id="hint" class="hint"></div>
   <button id="btn">Guardar</button>
   <p id="msg" class="msg"></p>
   <script>
+    function togglePwd(id, btn){ const i=document.getElementById(id); i.type = (i.type==="password")?"text":"password"; if(btn) btn.textContent = (i.type==="password")?"Mostrar":"Ocultar"; }
     let supabase;
     function initSupabase(){ try{ if(!supabase && window.supabase){ supabase = window.supabase.createClient(
       "https://uppdkjfjxtjnukftgwhz.supabase.co",

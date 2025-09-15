@@ -44,6 +44,16 @@ serve(async (req) => {
   if (req.method !== "POST") return ok({ ok: false }, 405);
 
   let body: any;
+  const url = new URL(req.url);
+  const qsAction = (url.searchParams.get('action')||'').toLowerCase();
+  if (req.method==='GET' && qsAction==='check_used') {
+    try { const email = String(url.searchParams.get('email')||'').trim();
+      const { data, error } = await supabase.from('invite_usage').select('id').eq('email', email).limit(1);
+      if (error) return ok({ ok:false }, 500);
+      return ok({ ok:true, used: (data||[]).length>0 });
+    } catch(_){ return ok({ ok:false }, 500); }
+  }
+
   try {
     const ip = req.headers.get('x-forwarded-for')||'unknown';
     const key = ip+'|'+(body?.email||'');

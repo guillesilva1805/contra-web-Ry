@@ -85,7 +85,18 @@ const q = (s) => document.querySelector(s);
       return true;
     }
 
-    window.addEventListener('load', ensureInviteSession);
+    async function checkInviteUsed(){
+      try{ const { data: { user } } = await (getClient()?.auth.getUser?.()||{});
+        const email = user?.email||'';
+        if(!email) return;
+        const res = await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite?action=check_used&email='+encodeURIComponent(email));
+        const j = await res.json();
+        if(j?.used){ document.getElementById('hint').textContent='Esta invitación ya fue usada.'; document.getElementById('btn').disabled=true; }
+      }catch(_){ }
+    }
+
+
+    window.addEventListener('load', async ()=>{ await ensureInviteSession(); await checkInviteUsed(); });
     document.addEventListener('DOMContentLoaded', () => {
       const t1 = document.getElementById('toggle1');
       const t2 = document.getElementById('toggle2');
@@ -121,6 +132,7 @@ const q = (s) => document.querySelector(s);
       if (p1.length < 8) { show('Usa al menos 8 caracteres.'); return; }
       initSupabase(); const { error } = await (supabase? (getClient()?.auth.updateUser)({ password: p1 }):{error:'no sdk'});
       if (error) { show('No se pudo guardar: ' + (error.message || 'Intenta otra vez.')); return; }
+      try{ const { data:{ user } } = await (getClient()?.auth.getUser?.()||{}); const email=user?.email||''; if(email){ await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'mark_used', email }) }); } }catch(_){ }
       show('Contraseña creada. Ya puedes iniciar sesión en la app.', true);
     };
   </script>

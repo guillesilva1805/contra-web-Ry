@@ -11,6 +11,7 @@ function togglePwd(id, btn){ const i=document.getElementById(id); i.type = (i.ty
     }
   } catch (e) { console.warn("Supabase SDK not ready", e); }
 }
+function getClient(){ initSupabase(); return window.__sbClient; }
 
 const q = (s) => document.querySelector(s);
     const show = (t, ok=false) => { const m=q('#msg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); };
@@ -40,7 +41,7 @@ const q = (s) => document.querySelector(s);
         try { await (getClient()?.auth.exchangeCodeForSession?.({ code: authCode })); } catch(_){}
       }
       if (access_token && refresh_token) {
-        initSupabase(); const { error } = await (supabase? (getClient()?.auth.setSession) : async()=>({error:'no sdk'}))({ access_token, refresh_token });
+        initSupabase(); const { error } = await await getClient().auth.setSession({ access_token, refresh_token });
         if (error) console.warn('setSession error', error);
       }
       initSupabase(); const { data: { session } } = await (supabase? (getClient()?.auth.getSession)():{data:{session:null}});
@@ -49,7 +50,7 @@ const q = (s) => document.querySelector(s);
     }
 
     async function checkInviteUsed(){
-      try{ const { data: { user } } = await (getClient()?.auth.getUser?.()||{});
+      try{ const { data: { user } } = await getClient().auth.getUser();
         const email = user?.email||'';
         if(!email) return;
         const res = await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite?action=check_used&email='+encodeURIComponent(email));
@@ -93,7 +94,7 @@ const q = (s) => document.querySelector(s);
       const p2 = q('#pass2').value.trim();
       if (!p1 || !p2 || p1 !== p2) { q('#hint').textContent='Las contraseñas no coinciden.'; return; }
       if (p1.length < 12) { show('Usa al menos 12 caracteres.'); return; }
-      initSupabase(); const { error } = await (supabase? (getClient()?.auth.updateUser)({ password: p1 }):{error:'no sdk'});
+      const { error } = await getClient().auth.updateUser({ password: p1 });
       if (error) { show('No se pudo guardar: ' + (error.message || 'Intenta otra vez.')); return; }
       try{ const { data:{ user } } = await (getClient()?.auth.getUser?.()||{}); const email=user?.email||''; if(email){ await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'mark_used', email }) }); } }catch(_){ }
       show('Contraseña creada. Ya puedes iniciar sesión en la app.', true);

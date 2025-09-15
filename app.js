@@ -107,24 +107,39 @@ document.addEventListener('click', function(ev){
   else if(t.id==='toggle2'){ togglePwd('pass2', t); }
 });
 
-// persist invite hash to avoid external cleaners
+// persist invite hash to avoid external cleaners (treat '#' or missing tokens as empty)
 (function(){
   try{
-    const h = window.location.hash||'';
-    if(h && (h.includes('access_token') || h.includes('refresh_token') || h.includes('token_hash') || h.includes('code='))){
-      sessionStorage.setItem('last_invite_hash', h);
-    }
-    window.addEventListener('hashchange', ()=>{
-      if(!window.location.hash && sessionStorage.getItem('last_invite_hash')){
-        window.location.hash = sessionStorage.getItem('last_invite_hash');
+    const TOKENS = ['access_token','refresh_token','token_hash','code='];
+    const hasTokens = (h) => TOKENS.some(k => (h||'').includes(k));
+    const getSaved = () => sessionStorage.getItem('last_invite_hash');
+    const saveIfTokens = (h) => { if(h && hasTokens(h)) sessionStorage.setItem('last_invite_hash', h); };
+    const shouldRestore = (h) => {
+      if(!h) return true;           // empty
+      if(h === '#') return true;    // stripped to '#'
+      if(!hasTokens(h)) return true; // replaced by '#/' or similar
+      return false;
+    };
+
+    // save current if it contains tokens
+    saveIfTokens(window.location.hash||'');
+
+    const restore = () => {
+      const saved = getSaved();
+      if(saved && shouldRestore(window.location.hash)){
+        window.location.hash = saved;
       }
-    });
+    };
+
+    // try immediately and on changes/visibility
+    setTimeout(restore, 0);
+    window.addEventListener('hashchange', restore);
+    document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') restore(); });
+
     // extra guard for first 5s
     let t=0; const id=setInterval(()=>{
       t+=500; if(t>5000){clearInterval(id);return;}
-      if(!window.location.hash && sessionStorage.getItem('last_invite_hash')){
-        window.location.hash = sessionStorage.getItem('last_invite_hash');
-      }
+      restore();
     },500);
   }catch(_){}
 })();

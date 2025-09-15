@@ -11,10 +11,10 @@ function togglePwd(id, btn){ const i=document.getElementById(id); i.type = (i.ty
     }
   } catch (e) { console.warn("Supabase SDK not ready", e); }
 }
-function getClient(){ initSupabase(); return window.__sbClient; }
+function getClient(){ initSupabase(); return window.__sbClient || null; }
 
 const q = (s) => document.querySelector(s);
-    const show = (t, ok=false) => { const m=q('#msg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); };
+    const show = (t, ok=false) => { const m=q('#msg'); if(m){ m.textContent=t; m.className='msg '+(ok?'ok':'err'); } };
 
     function parseHash() {
       const h = new URLSearchParams(window.location.hash.slice(1));
@@ -35,27 +35,32 @@ const q = (s) => document.querySelector(s);
       const token_hash = url.searchParams.get('token_hash');
       const linkType = url.searchParams.get('type');
       const authCode = url.searchParams.get('code');
+      const client = getClient();
+      if (!client) { // smoke.html no tiene Supabase; no bloquear
+        return true;
+      }
       if (!access_token && token_hash && linkType) {
-        try { await (getClient()?.auth.verifyOtp?.({ type: linkType, token_hash })); } catch(_){}
+        try { await (client.auth.verifyOtp?.({ type: linkType, token_hash })); } catch(_){ }
       } else if (!access_token && authCode) {
-        try { await (getClient()?.auth.exchangeCodeForSession?.({ code: authCode })); } catch(_){}
+        try { await (client.auth.exchangeCodeForSession?.({ code: authCode })); } catch(_){ }
       }
       if (access_token && refresh_token) {
-        initSupabase(); const { error } = await await getClient().auth.setSession({ access_token, refresh_token });
-        if (error) console.warn('setSession error', error);
+        try { const { error } = await client.auth.setSession({ access_token, refresh_token }); if (error) console.warn('setSession error', error); } catch(_){ }
       }
-      initSupabase(); const { data: { session } } = await (supabase? (getClient()?.auth.getSession)():{data:{session:null}});
-      if (!session) { show('No hay sesión de invitación activa. Abre el enlace del correo nuevamente.'); return false; }
+      try {
+        const { data: { session } } = await (client.auth.getSession?.()||{data:{session:null}});
+        if (!session) { show('No hay sesión de invitación activa. Abre el enlace del correo nuevamente.'); return false; }
+      } catch(_) { /* en smoke.html ignorar */ }
       return true;
     }
 
     async function checkInviteUsed(){
-      try{ const { data: { user } } = await getClient().auth.getUser();
+      try{ const client = getClient(); if(!client) return; const { data: { user } } = await client.auth.getUser();
         const email = user?.email||'';
         if(!email) return;
         const res = await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite?action=check_used&email='+encodeURIComponent(email));
         const j = await res.json();
-        if(j?.used){ document.getElementById('hint').textContent='Esta invitación ya fue usada.'; document.getElementById('btn').disabled=true; }
+        if(j?.used){ const h=document.getElementById('hint'); const b=document.getElementById('btn'); if(h) h.textContent='Esta invitación ya fue usada.'; if(b) b.disabled=true; }
       }catch(_){ }
     }
 
@@ -76,12 +81,12 @@ const q = (s) => document.querySelector(s);
     });
 
     function updateState(){
-      const p1 = q('#pass1').value.trim();
-      const p2 = q('#pass2').value.trim();
+      const p1 = q('#pass1')? q('#pass1').value.trim():'';
+      const p2 = q('#pass2')? q('#pass2').value.trim():'';
       const btn = q('#btn');
       const mismatch = p1 && p2 && p1 !== p2;
-      q('#hint').textContent = mismatch ? 'Las contraseñas no coinciden.' : '';
-      btn.disabled = mismatch;
+      const hintEl = q('#hint'); if(hintEl) hintEl.textContent = mismatch ? 'Las contraseñas no coinciden.' : '';
+      if(btn) btn.disabled = mismatch;
     }
     try {
       const p1el = q('#pass1');
@@ -99,11 +104,12 @@ const q = (s) => document.querySelector(s);
       if (!(await ensureInviteSession())) return;
       const p1 = q('#pass1').value.trim();
       const p2 = q('#pass2').value.trim();
-      if (!p1 || !p2 || p1 !== p2) { q('#hint').textContent='Las contraseñas no coinciden.'; return; }
+      if (!p1 || !p2 || p1 !== p2) { const h=q('#hint'); if(h) h.textContent='Las contraseñas no coinciden.'; return; }
       if (p1.length < 12) { show('Usa al menos 12 caracteres.'); return; }
-      const { error } = await getClient().auth.updateUser({ password: p1 });
+      const client = getClient(); if(!client) { show('Cliente no disponible.'); return; }
+      const { error } = await client.auth.updateUser({ password: p1 });
       if (error) { show('No se pudo guardar: ' + (error.message || 'Intenta otra vez.')); return; }
-      try{ const { data:{ user } } = await (getClient()?.auth.getUser?.()||{}); const email=user?.email||''; if(email){ await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'mark_used', email }) }); } }catch(_){ }
+      try{ const { data:{ user } } = await (client?.auth.getUser?.()||{}); const email=user?.email||''; if(email){ await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'mark_used', email }) }); } }catch(_){ }
       show('Contraseña creada. Ya puedes iniciar sesión en la app.', true);
     };
 // toggle delegation

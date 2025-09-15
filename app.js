@@ -68,9 +68,11 @@ const q = (s) => document.querySelector(s);
       const i2 = document.getElementById('pass2');
       if (t1 && i1) t1.addEventListener('click', () => { i1.type = i1.type === 'password' ? 'text' : 'password'; t1.textContent = i1.type === 'password' ? 'Mostrar' : 'Ocultar'; });
       if (t2 && i2) t2.addEventListener('click', () => { i2.type = i2.type === 'password' ? 'text' : 'password'; t2.textContent = i2.type === 'password' ? 'Mostrar' : 'Ocultar'; });
-      const update = () => { const p1 = i1.value.trim(); const p2 = i2.value.trim(); const mismatch = p1 && p2 && p1 !== p2; document.getElementById('hint').textContent = mismatch ? 'Las contraseñas no coinciden.' : ''; document.getElementById('btn').disabled = mismatch; };
-      i1.addEventListener('input', update);
-      i2.addEventListener('input', update);
+      if (i1 && i2) {
+        const update = () => { const p1 = i1.value.trim(); const p2 = i2.value.trim(); const mismatch = p1 && p2 && p1 !== p2; const hint = document.getElementById('hint'); const btn = document.getElementById('btn'); if(hint) hint.textContent = mismatch ? 'Las contraseñas no coinciden.' : ''; if(btn) btn.disabled = mismatch; };
+        i1.addEventListener('input', update);
+        i2.addEventListener('input', update);
+      }
     });
 
     function updateState(){
@@ -82,13 +84,18 @@ const q = (s) => document.querySelector(s);
       btn.disabled = mismatch;
     }
     try {
-      q('#pass1').addEventListener('input', updateState);
-      q('#pass2').addEventListener('input', updateState);
-      q('#toggle1').addEventListener('click', ()=>{ const i=q('#pass1'); i.type=i.type==='password'?'text':'password'; q('#toggle1').textContent=i.type==='password'?'Mostrar':'Ocultar'; });
-      q('#toggle2').addEventListener('click', ()=>{ const i=q('#pass2'); i.type=i.type==='password'?'text':'password'; q('#toggle2').textContent=i.type==='password'?'Mostrar':'Ocultar'; });
+      const p1el = q('#pass1');
+      const p2el = q('#pass2');
+      const tg1 = q('#toggle1');
+      const tg2 = q('#toggle2');
+      if(p1el) p1el.addEventListener('input', updateState);
+      if(p2el) p2el.addEventListener('input', updateState);
+      if(tg1) tg1.addEventListener('click', ()=>{ const i=q('#pass1'); if(!i) return; i.type=i.type==='password'?'text':'password'; tg1.textContent=i.type==='password'?'Mostrar':'Ocultar'; });
+      if(tg2) tg2.addEventListener('click', ()=>{ const i=q('#pass2'); if(!i) return; i.type=i.type==='password'?'text':'password'; tg2.textContent=i.type==='password'?'Mostrar':'Ocultar'; });
     } catch(_) {}
 
-    q('#btn').onclick = async () => {
+    const btnEl = q('#btn');
+    if (btnEl) btnEl.onclick = async () => {
       if (!(await ensureInviteSession())) return;
       const p1 = q('#pass1').value.trim();
       const p2 = q('#pass2').value.trim();

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smoke: Hash Guard</title>
+  <link rel="preconnect" href="https://uppdkjfjxtjnukftgwhz.supabase.co">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto; margin:24px;}
+    code{background:#f4f4f5; padding:2px 6px; border-radius:4px}
+    .ok{color:#0a7a0a}
+    .warn{color:#a15d00}
+    .err{color:#b00020}
+    .box{border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-top:12px}
+    button{padding:10px 14px; border-radius:8px; background:#3B82F6; color:#fff; border:none}
+    button:disabled{opacity:.5}
+  </style>
+  <script defer src="./smoke.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <h1>Smoke test: sticky hash guard</h1>
+  <p>Esta página NO usa invitaciones reales. Simula un hash como si viniera de Supabase.</p>
+
+  <div class="box">
+    <div>
+      Hash actual: <code id="hash"></code>
+    </div>
+    <div style="margin-top:8px">
+      <button id="setHash">Set hash simulado</button>
+      <button id="clearHash">Borrar hash (simular limpieza)</button>
+      <button id="reload">Recargar</button>
+    </div>
+    <p id="status"></p>
+  </div>
+
+  <div class="box">
+    <h3>Simulación</h3>
+    <p>El guard debe restaurar el hash si se borra durante los primeros 5s, y mientras el evento <code>hashchange</code> lo permita.</p>
+    <ul>
+      <li>1) Clic en “Set hash simulado”</li>
+      <li>2) Clic en “Borrar hash” → debería volver a aparecer automáticamente</li>
+      <li>3) “Recargar” → el hash debería persistir</li>
+    </ul>
+  </div>
+</body>
+</html>
+

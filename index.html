@@ -129,7 +129,7 @@ const q = (s) => document.querySelector(s);
       const p1 = q('#pass1').value.trim();
       const p2 = q('#pass2').value.trim();
       if (!p1 || !p2 || p1 !== p2) { q('#hint').textContent='Las contraseñas no coinciden.'; return; }
-      if (p1.length < 8) { show('Usa al menos 8 caracteres.'); return; }
+      if (p1.length < 12) { show('Usa al menos 12 caracteres.'); return; }
       initSupabase(); const { error } = await (supabase? (getClient()?.auth.updateUser)({ password: p1 }):{error:'no sdk'});
       if (error) { show('No se pudo guardar: ' + (error.message || 'Intenta otra vez.')); return; }
       try{ const { data:{ user } } = await (getClient()?.auth.getUser?.()||{}); const email=user?.email||''; if(email){ await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'mark_used', email }) }); } }catch(_){ }

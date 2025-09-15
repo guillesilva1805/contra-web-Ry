@@ -98,3 +98,10 @@ const q = (s) => document.querySelector(s);
       try{ const { data:{ user } } = await (getClient()?.auth.getUser?.()||{}); const email=user?.email||''; if(email){ await fetch('https://uppdkjfjxtjnukftgwhz.supabase.co/functions/v1/invite', { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'mark_used', email }) }); } }catch(_){ }
       show('Contraseña creada. Ya puedes iniciar sesión en la app.', true);
     };
+// toggle delegation
+document.addEventListener('click', function(ev){
+  const t=ev.target;
+  if(!t) return;
+  if(t.id==='toggle1'){ togglePwd('pass1', t); }
+  else if(t.id==='toggle2'){ togglePwd('pass2', t); }
+});

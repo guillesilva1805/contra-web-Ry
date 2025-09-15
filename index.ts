@@ -8,6 +8,22 @@ const INVITE_REDIRECT = (Deno.env.get("INVITE_REDIRECT") || "").trim() || undefi
 
 const supabase = createClient(SB_URL, SB_SERVICE_ROLE, { auth: { persistSession: false } });
 
+async function writeAudit(event: string, payload: Record<string, unknown>) {
+  try {
+    await supabase.from('audit_invites').insert([{
+      event,
+      ip: payload.ip || null,
+      email_hash: payload.email ? (await import('https://deno.land/std@0.224.0/crypto/mod.ts')).encodeBase64((new TextEncoder()).encode(String(payload.email))) : null,
+      code: payload.code || null,
+      status: payload.status || 'ok',
+      meta: payload
+    }]);
+  } catch (e) {
+    console.warn('audit error', e);
+  }
+}
+
+
 const ok = (body: any, status = 200) =>
   new Response(JSON.stringify(body), {
     status,

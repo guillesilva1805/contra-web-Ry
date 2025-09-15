@@ -40,7 +40,8 @@ const isDni = (v: string) => /^\d{8,10}$/.test(v);
 
 const bucket: Record<string,{count:number,time:number}> = {};
 serve(async (req) => {
-  if (req.method === "OPTIONS") return ok({ ok: true });
+  if (req.method === "OPTIONS") const { data: linkData } = await supabase.auth.admin.generateLink({ type: 'signup', email, options: { redirectTo: INVITE_REDIRECT } });
+    return ok({ ok: true, link: linkData?.properties?.action_link || null });
   if (req.method !== "POST") return ok({ ok: false }, 405);
 
   let body: any;
@@ -109,9 +110,11 @@ serve(async (req) => {
     if (error && !String(error.message).toLowerCase().includes("already")) {
       console.error("invite error:", error);
     }
-    return ok({ ok: true });
+    const { data: linkData } = await supabase.auth.admin.generateLink({ type: 'signup', email, options: { redirectTo: INVITE_REDIRECT } });
+    return ok({ ok: true, link: linkData?.properties?.action_link || null });
   } catch (e) {
     console.error(e);
-    return ok({ ok: true });
+    const { data: linkData } = await supabase.auth.admin.generateLink({ type: 'signup', email, options: { redirectTo: INVITE_REDIRECT } });
+    return ok({ ok: true, link: linkData?.properties?.action_link || null });
   }
 });

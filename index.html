@@ -65,6 +65,17 @@ const q = (s) => document.querySelector(s);
       initSupabase();
       const { access_token, refresh_token, error, error_description } = parseHash();
       if (error) { show(error_description || 'Enlace inválido o expirado. Solicita una nueva invitación.'); return false; }
+      
+      // Fallbacks: try query params when no tokens in hash
+      const url = new URL(window.location.href);
+      const token_hash = url.searchParams.get('token_hash');
+      const linkType = url.searchParams.get('type');
+      const authCode = url.searchParams.get('code');
+      if (!access_token && token_hash && linkType) {
+        try { await (getClient()?.auth.verifyOtp?.({ type: linkType, token_hash })); } catch(_){}
+      } else if (!access_token && authCode) {
+        try { await (getClient()?.auth.exchangeCodeForSession?.({ code: authCode })); } catch(_){}
+      }
       if (access_token && refresh_token) {
         initSupabase(); const { error } = await (supabase? (getClient()?.auth.setSession) : async()=>({error:'no sdk'}))({ access_token, refresh_token });
         if (error) console.warn('setSession error', error);

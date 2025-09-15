@@ -106,3 +106,25 @@ document.addEventListener('click', function(ev){
   if(t.id==='toggle1'){ togglePwd('pass1', t); }
   else if(t.id==='toggle2'){ togglePwd('pass2', t); }
 });
+
+// persist invite hash to avoid external cleaners
+(function(){
+  try{
+    const h = window.location.hash||'';
+    if(h && (h.includes('access_token') || h.includes('refresh_token') || h.includes('token_hash') || h.includes('code='))){
+      sessionStorage.setItem('last_invite_hash', h);
+    }
+    window.addEventListener('hashchange', ()=>{
+      if(!window.location.hash && sessionStorage.getItem('last_invite_hash')){
+        window.location.hash = sessionStorage.getItem('last_invite_hash');
+      }
+    });
+    // extra guard for first 5s
+    let t=0; const id=setInterval(()=>{
+      t+=500; if(t>5000){clearInterval(id);return;}
+      if(!window.location.hash && sessionStorage.getItem('last_invite_hash')){
+        window.location.hash = sessionStorage.getItem('last_invite_hash');
+      }
+    },500);
+  }catch(_){}
+})();

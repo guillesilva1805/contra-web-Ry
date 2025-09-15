@@ -134,11 +134,12 @@ document.addEventListener('click', function(ev){
     // try immediately and on changes/visibility
     setTimeout(restore, 0);
     window.addEventListener('hashchange', restore);
+    window.addEventListener('popstate', restore);
     document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') restore(); });
 
-    // extra guard for first 5s
+    // extra guard window (30s) to survive history.replaceState or extensions
     let t=0; const id=setInterval(()=>{
-      t+=500; if(t>5000){clearInterval(id);return;}
+      t+=500; if(t>30000){clearInterval(id);return;}
       restore();
     },500);
   }catch(_){}
